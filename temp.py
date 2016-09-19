@@ -33,7 +33,7 @@ def LinearRegression(X,y,w):
     listWt= np.zeros((100,2),dtype = np.double)
     for i in range(100):
         listErr[i,0] = Err(X,y,w)
-        #print(i,"   ",Err(X,y,w))
+        print(i,"   ",Err(X,y,w))
         listWt[i,0] = w[0,0]
         listWt[i,1] = w[1,0]
         w = w - alpha * GradientDescent(X,y,w)    
@@ -84,6 +84,8 @@ def KFold(X,y,w,K):
         yTrain = np.delete(y,np.s_[looper * sizeOfFold:(looper + 1) * sizeOfFold],0)
         w = LinearRegression(XTrain,yTrain,w)
         sumErr += Err(XTest,yTest,w)
+        print(Err(XTest,yTest,w))
+        w = np.zeros((len(X[1,:]),1),dtype = int)
         
         #XTemp1 = X[numberOfRecords - sizeOfFold:,:]
         #XTemp = XTemp1
@@ -122,12 +124,11 @@ def Swap(X,XTemp,XTemp1,numberOfRecords,sizeOfFold,looper):
 db = 2
     
 pickle.dump(db,open('xyz.txt',"wb"))
-x = np.array([[0.86,0.09,-0.85,0.87,-0.44,-0.43,-1.10,0.40,-0.96,0.17]
+X = np.array([[0.86,0.09,-0.85,0.87,-0.44,-0.43,-1.10,0.40,-0.96,0.17]
 ,[1,1,1,1,1,1,1,1,1,1]])
 
-x = np.transpose(x)
-w = np.zeros((2,1),dtype = np.int)
-
+X = np.transpose(X)
+w = np.zeros((len(X[1,:]),1),dtype = int)
 #print(2 * (w))
 
 y = np.array([[2.49,0.83,-0.25,3.10,0.87,0.02,-0.12,1.81,-0.83,0.43]])
@@ -152,13 +153,5 @@ plt.show()'''
 #
 #print(x)
 #print(y)
-print(KFold(x,y,w,3))
+print(KFold(X,y,w,3))
 
-maskX = np.ones(np.shape(x),dtype = np.bool)
-maskY = np.ones(np.shape(y),dtype = np.bool)
-maskX[1,:] = False
-#print(maskX)
-#print("deleted",np.delete(x,1,0))
-#print(x)
-#print(x[maskX])
-#print(x)
