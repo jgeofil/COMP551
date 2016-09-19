@@ -1,0 +1,148 @@
+use mlProj;
+SET SQL_SAFE_UPDATES = 0;
+create table rawData (ParticpantId varchar(50),eventDate varchar(20),eventName varchar(100),eventType varchar(100),CompletionTime varchar(20),category varchar(20));
+drop table rawData;
+create table Y2Data(ID numeric,Gender varchar(1),Age numeric,AvgTime decimal(10,5));
+select count(*) from Y2Data;
+select * from Y2Data;
+select Id,Gender,avg(Age),avg(AvgTime) from Y2Data group by(Id); 
+
+create table Y2Avg(ID numeric,Gender varchar(1),Age numeric,AvgTime decimal(10,5));
+select Distinct Id from Y2Data; 
+drop table Y2Avg;
+
+
+SELECT Id,Gender,avg(Age),avg(AvgTime) from Y2Data group by(Id)
+INTO OUTFILE '/out.csv'
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n';
+
+select * from Y2Data where Age = -1; 
+select Avg(Age) from Y2Data where Age <> -1; 
+
+select (Age) from Y2Data where Age <> -1;
+
+select count(*) from Y2Data where Age <> -1;
+
+
+
+create table data2
+(ID integer(6),
+Edate varchar(20),Event varchar(100), Type varchar(100),Tim varchar(10),Cat varchar(10));
+
+LOAD DATA INFILE '/home/navin/marathon/data2.csv'    
+    INTO TABLE data2;
+    
+    
+    
+LOAD DATA INFILE '/media/navin/New Volume/data2.csv' INTO TABLE data2 FIELDS TERMINATED BY ','     
+ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 LINES (ID,EDate,Event,Type,Tim,Cat);
+    
+    
+create table AllIds(Id numeric primary key);    
+
+
+
+select * from timeFor2016;
+select * from timeFor2015;
+select * from timeFor2014;
+select * from timeFor2013;
+select * from timeFor2012;
+select * from Ids;
+
+delete from Ids where Event_Date = 'EVENT_DATE';
+SET SQL_SAFE_UPDATES = 0;
+alter table Ids add constraint primary key(participant_id);
+
+select t1.participant_id,t1.time_in_2015,t2.time_in_2016 from timeFor2015 t1 left join timeFor2016 t2 on t1.Participant_ID = t2.participant_id; 
+
+create table temp12
+(select I.participant_id,T.time_in_2012 from Ids I left join timeFor2012 T on I.participant_id = T.participant_id order by I.participant_id);
+
+select * from temp15 I left join timeFor2016 T on I.participant_id = T.participant_id order by I.participant_id;
+
+create table temp13
+(select I.participant_id,I.time_in_2012,T.time_in_2013 from temp12 I left join timeFor2013 T on I.participant_id = T.participant_id order by I.participant_id); 
+
+
+create table temp14
+(select I.participant_id,I.time_in_2012,I.time_in_2013,T.time_in_2014 from temp13 I left join timeFor2014 T on I.participant_id = T.participant_id order by I.participant_id); 
+
+create table temp15
+(select I.participant_id,I.time_in_2012,I.time_in_2013,I.time_in_2014,T.time_in_2015 from temp14 I left join timeFor2015 T on I.participant_id = T.participant_id order by I.participant_id); 
+
+create table temp16
+(select I.participant_id,I.time_in_2012,I.time_in_2013,I.time_in_2014,I.time_in_2015,T.time_in_2016 from temp15 I left join timeFor2016 T on I.participant_id = T.participant_id order by I.participant_id); 
+
+
+
+select * from temp12;
+select * from temp13;
+select * from temp14;
+select * from temp15;
+select * from temp16;
+drop table temp13;
+update montreal_marathon_2015 set TimSec = (TimSec +186.5367)/0.2311 
+ where Type = "5 km";
+
+select count(*) from montreal_marathon_2015 where type='Marathon';
+
+select * from montreal_marathon_2015 where type='5 km';
+
+select * from montreal_marathon_2015;
+
+select count(distinct ID) from montreal_marathon_2015;
+
+select distinct Type from montreal_marathon_2015;
+
+
+update montreal_marathon_2015 set TimSec = TimSec *  46.8293 + 1598.3947 where Type = "1 km - P'tit Marathon";
+
+update montreal_marathon_2015 set TimSec = TimSec *  4.3268 + 807.3818
+ where Type = "10 km";
+
+update montreal_marathon_2015 set TimSec = TimSec *  1.9755 + 637.3307 
+ where Type = "Demi-Marathon";
+
+update montreal_marathon_2015 set TimSec = TimSec *  9.0869 + 641.3391 
+ where Type = "5 km";
+
+create table XY
+(select I.participant_id,I.time_in_2012,I.time_in_2013,I.time_in_2014,I.time_in_2015,T.timsec from temp15 I left join montreal_marathon_2015 T on I.participant_id = T.id order by I.participant_id); 
+
+select * from XY;
+
+create table XYDup
+(select I.participant_id,I.time_in_2012,I.time_in_2013,I.time_in_2014,I.time_in_2015,T.timsec from temp15 I left join montreal_marathon_2015 T on I.participant_id = T.id order by I.participant_id); 
+
+select count(distinct PARTICIPANT_ID) from XYDup;
+
+update XYDup set time_in_2012 = 0 where time_in_2012 is null;
+
+update XYDup set time_in_2013 = 0 where time_in_2013 is null;
+
+update XYDup set time_in_2014 = 0 where time_in_2014 is null;
+
+update XYDup set time_in_2015 = 0 where time_in_2015 is null;
+
+drop table montreal_marathon_2015;
+
+call new_function();
+
+select PARTICIPANT_ID,abs(time_in_2013 - time_in_2012),abs(time_in_2014-time_in_2013),abs(time_in_2015-time_in_2014)
+from XYDup where time_in_2012 <> 0 and time_in_2013 <> 0
+and time_in_2014 <> 0 and time_in_2015 <> 0;
+
+select avg(abs(time_in_2013 - time_in_2012)),avg(abs(time_in_2014-time_in_2013)),avg(abs(time_in_2015-time_in_2014))
+from XYDup where time_in_2012 <> 0 and time_in_2013 <> 0
+and time_in_2014 <> 0 and time_in_2015 <> 0;
+
+select * from XYDup 
+where
+time_in_2012 = 0 and time_in_2013 = 0
+and time_in_2014 = 0 and time_in_2015 = 0;
+
+select PARTICIPANT_ID from XYDup group by participant_id having count(*) > 1;
+
+
