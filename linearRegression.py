@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d as plot3d
 import pandas as pan
 import math
+import sys
 from numpy import genfromtxt
 
 def getMatrixFromFile(inputFileName):
@@ -67,8 +68,7 @@ def KFoldLinearRegression(X,y,w,K):
     sumErrMSE = 0
     sumMeanErrAbsolute = 0
     for looper in range(K):
-
-        print(looper,"   ")
+        #print(looper,"   ")
         if K-1 == looper:
             XTest = X[looper * sizeOfFold:,:]
             yTest = y[looper * sizeOfFold:,:]
@@ -82,9 +82,8 @@ def KFoldLinearRegression(X,y,w,K):
         difference = (np.dot(XTest,w) - yTest)
         difference = np.abs(difference)
         sumMeanErrAbsolute += np.mean(difference)
-        print("K Fold",(Err(XTest,yTest,w)))
+        #print("K Fold",(Err(XTest,yTest,w)))
         w = np.zeros((len(X[1,:]),1),dtype = int)
-        
     w = LinearRegression(X,y,w)
     return sumErrMSE / K,sumMeanErrAbsolute / K,w
 
@@ -104,7 +103,7 @@ def KFoldClosedMatrixForm(X,y,w,K):
         yTrain = np.delete(y,np.s_[looper * sizeOfFold:(looper + 1) * sizeOfFold],0)
         w = NormalEquation(XTrain,yTrain,w)
         sumErr += Err(XTest,yTest,w)
-        print("K Fold",(Err(XTest,yTest,w)))
+        #print("K Fold",(Err(XTest,yTest,w)))
         w = np.zeros((len(X[1,:]),1),dtype = int)
     return sumErr / K
 
@@ -131,62 +130,60 @@ def correlation(X,y,wLinear):
     yPredicted = np.dot(X, wLinear)
     a = yPredicted - np.mean(yPredicted)
     b = y - np.mean(y)
-    print(np.sum((a) * (b)) / math.sqrt(np.sum(a ** 2) * np.sum(b ** 2)))
+    #print(np.sum((a) * (b)) / math.sqrt(np.sum(a ** 2) * np.sum(b ** 2)))
     plt.scatter(y,yPredicted)
     plt.ylim(0,10)
     plt.xlim(0,10)
     plt.xlabel('yActual')
     plt.ylabel('yPredicted')
-    plt.grid()    
+    plt.grid()
+    return np.sum((a) * (b)) / math.sqrt(np.sum(a ** 2) * np.sum(b ** 2))
+
+def main():
+    #sys.stdout=open("test.txt","w")
+    X = getMatrixFromFile('Final/featureMatrixFinal.csv')
+    y = getMatrixFromFile('Final/vectorY.csv')
+    #The next 2 lines take the traspose of y to generate y vector
+    y = y[np.newaxis]
+    y = np.transpose(y)
+
+    #Convert the time in seconds to hours for matrix X and output vector Y
+    X[:,0:3] = X[:,0:3]/3600
+    y = y/3600
 
 
+    plt.plot(X[:,0],)
+    #Normalize matrix X
 
-sys.stdout=open("test.txt","w")
-X = getMatrixFromFile('featureMatrix.csv')
-y = getMatrixFromFile('vectorY.csv')
-#The next 2 lines take the traspose of y to generate y vector
-y = y[np.newaxis]
-y = np.transpose(y)
+    X = Normalize(X)
 
-#Convert the time in seconds to hours for matrix X and output vector Y
-X[:,0:3] = X[:,0:3]/3600
-y = y/3600
+    #Add bias vector column to all 1s in the Matrix X
+    bias = np.ones((len(X[:,1]),1))
+    X = np.append(X,bias,axis = 1)
+    perm = np.random.permutation(len(X))
+    X,y = X[perm],y[perm]
+    w = np.zeros((len(X[1,:]),1),dtype = int)# initialize w = zero vector
+    K = 10
+    #KFoldClosedMatrixForm(X,y,w,K)
+    MSELinear,meanAbsoluteLinear,wLinear = KFoldLinearRegression(X,y,w,K)
+    mseLinear = MSELinear[0];
+    #print mseLinear
+    print('The Mean Square Error for Linear Regression Using K-Fold cross-validation is ',MSELinear)
+    print('The Mean Absolute Error for Linear Regression Using K-Fold cross-validation is ',meanAbsoluteLinear)
+    print('The Correlation between predicted output and the actual output is ', correlation(X,y,wLinear))
+    print('The Hypothesis is ',wLinear[0],' * AVG-TIME-YEAR-3 + ',wLinear[1],' * AVG-TIME-YEAR-2 +'
+    ,wLinear[2],' * AVG-TIME-YEAR-1 + ',wLinear[3],' * AGE + ',wLinear[4],' * GENDER + ',wLinear[5])
+    fullX = getMatrixFromFile('Final/XMatrix.csv')
+    allIds = fullX[:,len(fullX[1,:]) - 1]
+    fullX = fullX[:,1:len(fullX[1,:]) - 1]
+    fullX = Normalize(fullX)
+    bias = np.ones((len(fullX[:,1]),1))
+    fullX = np.append(fullX,bias,axis = 1)
+    #print(fullX)
+    yPredicted = np.dot(fullX,wLinear)
+    finalPrediction = pan.Series();
+    for i in range(len(fullX)):
+        finalPrediction.loc[int(allIds[i])]=correctTimeFormat(yPredicted[i]*3600)
+    return finalPrediction
 
-
-plt.plot(X[:,0],)
-#Normalize matrix X
-
-X = Normalize(X)
-
-#Add bias vector column to all 1s in the Matrix X
-bias = np.ones((len(X[:,1]),1))
-X = np.append(X,bias,axis = 1)
-perm = np.random.permutation(len(X))
-X,y = X[perm],y[perm]
-
-
-w = np.zeros((len(X[1,:]),1),dtype = int)# initialize w = zero vector
-K = 10
-#KFoldClosedMatrixForm(X,y,w,K)
-MSELinear,meanAbsoluteLinear,wLinear = KFoldLinearRegression(X,y,w,K)
-print('The Mean Square Error for Linear Regression Using K-Fold cross-validation is ',MSELinear)
-print('The Mean Absolute Error for Linear Regression Using K-Fold cross-validation is ',meanAbsoluteLinear)
-print('The Correlation between predicted output and the actual output is ', correlation(X,y,wLinear))
-print('The Hypothesis is ',wLinear[0],' * AVG-TIME-YEAR-3 + ',wLinear[1],' * AVG-TIME-YEAR-2 +'
-,wLinear[2],' * AVG-TIME-YEAR-1 + ',wLinear[3],' * AGE + ',wLinear[4],' * GENDER + ',wLinear[5])
-
-fullX = getMatrixFromFile('XMatrix.csv')
-allIds = fullX[:,len(fullX[1,:]) - 1]
-fullX = fullX[:,1:len(fullX[1,:]) - 1]
-
-fullX = Normalize(fullX)
-
-bias = np.ones((len(fullX[:,1]),1))
-fullX = np.append(fullX,bias,axis = 1)
-
-#print(fullX)
-yPredicted = np.dot(fullX,wLinear)
-for i in range(len(fullX)):
-    print(allIds[i],"\t",correctTimeFormat(yPredicted[i] * 3600))
-
-#print(KFoldClosedMatrixForm(X,y,w,K))
+linearRegressionPrediction = main();
